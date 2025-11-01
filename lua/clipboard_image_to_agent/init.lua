@@ -20,8 +20,25 @@ local default_commands = {
   },
 }
 
+local function default_cache_dir()
+  local tmpdir = vim.env.TMPDIR
+  if tmpdir and tmpdir ~= '' then
+    return vim.fs.normalize(vim.fs.joinpath(tmpdir, 'clipboard-images'))
+  end
+
+  if uv and uv.os_tmpdir then
+    local uv_tmpdir = uv.os_tmpdir()
+    if uv_tmpdir and uv_tmpdir ~= '' then
+      return vim.fs.normalize(vim.fs.joinpath(uv_tmpdir, 'clipboard-images'))
+    end
+  end
+
+  local fallback = vim.fn.stdpath('cache')
+  return vim.fs.normalize(vim.fs.joinpath(fallback, 'clipboard-images'))
+end
+
 local config = {
-  cache_dir = vim.fs.normalize(vim.fn.stdpath('cache') .. '/clipboard-images'),
+  cache_dir = default_cache_dir(),
   filename_prefix = 'clipboard-image-to-agent',
   commands = default_commands,
   trailing_space = true,

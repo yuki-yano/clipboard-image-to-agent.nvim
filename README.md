@@ -5,7 +5,7 @@ Simple Neovim helper that saves the current clipboard image to a local file and 
 ## Features
 
 - Tries multiple clipboard backends (`pngpaste`, `wl-paste`, `xclip`) and falls back automatically.
-- Stores images under `stdpath('cache') .. '/clipboard-images'` with unique filenames.
+- Stores images under `$TMPDIR/clipboard-images` by default (falling back to `stdpath('cache') .. '/clipboard-images'`) with unique filenames.
 - Exposes a single `paste()` function so you can map it to `<C-v>` or any key you like.
 
 Neovim 0.10+ is required because the plugin relies on `vim.system`.
