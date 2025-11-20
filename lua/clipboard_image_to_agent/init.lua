@@ -42,6 +42,7 @@ local config = {
   filename_prefix = 'clipboard-image-to-agent',
   commands = default_commands,
   trailing_space = true,
+  fallback = nil,
 }
 
 local function deepcopy(tbl)
@@ -164,6 +165,43 @@ local function insert_text(text)
   vim.api.nvim_win_set_cursor(win, { row, col + #text })
 end
 
+local function with_trailing_space(text, override)
+  local trailing = config.trailing_space
+  if override ~= nil then
+    trailing = override
+  end
+  if trailing then
+    return text .. ' '
+  end
+  return text
+end
+
+local function run_fallback(err)
+  local fallback = config.fallback
+  if not fallback then
+    return false, err
+  end
+
+  local ok, res = pcall(fallback, err)
+  if not ok then
+    return false, string.format('fallback handler errored: %s', res)
+  end
+
+  local text, trailing_override = res, nil
+  if type(res) == 'table' then
+    text = res.text
+    trailing_override = res.trailing_space
+  end
+
+  if not text or text == '' then
+    return false, err
+  end
+
+  local to_insert = with_trailing_space(text, trailing_override)
+  insert_text(to_insert)
+  return true, to_insert
+end
+
 function M.setup(opts)
   opts = opts or {}
   if opts.cache_dir then
@@ -179,6 +217,9 @@ function M.setup(opts)
   end
   if opts.trailing_space ~= nil then
     config.trailing_space = opts.trailing_space
+  end
+  if opts.fallback ~= nil then
+    config.fallback = opts.fallback
   end
 end
 
@@ -203,12 +244,9 @@ end
 function M.paste()
   local path, err = capture_image()
   if not path then
-    return false, err
+    return run_fallback(err)
   end
-  local abs = vim.fs.normalize(path)
-  if config.trailing_space then
-    abs = abs .. ' '
-  end
+  local abs = with_trailing_space(vim.fs.normalize(path))
   insert_text(abs)
   return true, abs
 end
