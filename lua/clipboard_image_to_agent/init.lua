@@ -2,6 +2,29 @@ local M = {}
 
 local uv = vim.loop
 
+---@class ClipboardImageToAgentCommand
+---@field command string[]
+---@field output '"file"'|'"stdout"'
+---@field description? string
+
+---@class ClipboardImageToAgentFallbackResult
+---@field text string
+---@field trailing_space? boolean
+
+---@class ClipboardImageToAgentOptions
+---@field cache_dir? string
+---@field filename_prefix? string
+---@field commands? ClipboardImageToAgentCommand[]
+---@field trailing_space? boolean
+---@field fallback? fun(err: string): string|ClipboardImageToAgentFallbackResult|nil
+
+---@class ClipboardImageToAgentConfig : ClipboardImageToAgentOptions
+---@field cache_dir string
+---@field filename_prefix string
+---@field commands ClipboardImageToAgentCommand[]
+---@field trailing_space boolean
+
+---@type ClipboardImageToAgentCommand[]
 local default_commands = {
   {
     command = { 'pngpaste', '$OUTPUT' },
@@ -37,6 +60,7 @@ local function default_cache_dir()
   return vim.fs.normalize(vim.fs.joinpath(fallback, 'clipboard-images'))
 end
 
+---@type ClipboardImageToAgentConfig
 local config = {
   cache_dir = default_cache_dir(),
   filename_prefix = 'clipboard-image-to-agent',
@@ -202,6 +226,7 @@ local function run_fallback(err)
   return true, to_insert
 end
 
+---@param opts? ClipboardImageToAgentOptions
 function M.setup(opts)
   opts = opts or {}
   if opts.cache_dir then
