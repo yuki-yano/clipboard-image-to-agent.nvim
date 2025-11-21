@@ -185,8 +185,12 @@ local function insert_text(text)
   local win = vim.api.nvim_get_current_win()
   local bufnr = vim.api.nvim_get_current_buf()
   local row, col = unpack(vim.api.nvim_win_get_cursor(win))
-  vim.api.nvim_buf_set_text(bufnr, row - 1, col, row - 1, col, { text })
-  vim.api.nvim_win_set_cursor(win, { row, col + #text })
+  local lines = vim.split(text, '\n', true)
+  vim.api.nvim_buf_set_text(bufnr, row - 1, col, row - 1, col, lines)
+  local last = lines[#lines]
+  local new_row = row + #lines - 1
+  local new_col = (#lines == 1) and (col + #last) or #last
+  vim.api.nvim_win_set_cursor(win, { new_row, new_col })
 end
 
 local function with_trailing_space(text, override)
